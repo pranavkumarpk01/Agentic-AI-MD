@@ -1,0 +1,13 @@
+langchain==1.3.4
+langchain-core
+langchain-community
+langchain-ollama
+
+langgraph
+
+chromadb
+sentence-transformers
+
+python-dotenv
+
+requests
