@@ -1,16 +1,37 @@
-from workflows.sequential_flow import sequential_flow
+from workflows.sequential_flow import  sequential_flow
+from workflows.parallel_flow import  parallel_execute
+from workflows.supervisor_flow import supervisor_execute
 
-topic = "The impact of artificial intelligence on society"
 
-# Now 'result' will contain both pieces of data
-result = sequential_flow(topic)
+print("\n1. Sequential Flow")
+print("2. Parallel Flow")
+print("3. Supervisor Flow")
 
-print("==============================")
-print("📝 THE GENERATED ARTICLE (ANSWER):")
-print("==============================")
-print(result["generated_article"])
+choice = input("\nChoose Demo: ")
 
-print("\n\n==============================")
-print("🧐 THE REVIEWER FEEDBACK:")
-print("==============================")
-print(result["reviewer_feedback"])
+if choice == "1":
+
+    result = sequential_flow(
+        "Future of Artificial Intelligence"
+    )
+
+    print(result)
+
+elif choice == "2":
+
+    result = parallel_execute(
+        "Microsoft"
+    )
+
+    print(result)
+
+elif choice == "3":
+
+    result = supervisor_execute(
+        "want to go to Paris next month"
+    )
+
+    print(result)
+
+else:
+    print("Invalid Choice")
