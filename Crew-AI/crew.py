@@ -1,21 +1,23 @@
 from crewai import Crew, Process
 
 def create_crew(
-        researcher,
-        writer,
-        reviewer,
-        tasks
+    researcher_agent,
+    writer_agent,
+    reviewer_agent,
+    manager_agent,
+    tasks
 ):
 
-    crew = Crew(
+    return Crew(
         agents=[
-            researcher,
-            writer,
-            reviewer
+            researcher_agent,
+            writer_agent,
+            reviewer_agent
         ],
         tasks=tasks,
-        process=Process.sequential,
-        verbose=True
+        manager_agent=manager_agent,
+        process=Process.hierarchical,
+        verbose=True,
+        memory=False,
+        planning=False
     )
-
-    return crew

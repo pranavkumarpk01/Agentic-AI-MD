@@ -1,32 +1,34 @@
 from agents import (
-    researcher,
-    writer,
-    reviewer
+    researcher_agent,
+    writer_agent,
+    reviewer_agent,
+    manager_agent
 )
 
 from tasks import create_tasks
 from crew import create_crew
 
-topic = input("Enter Topic: ")
+def main():
 
-tasks = create_tasks(
-    topic,
-    researcher,
-    writer,
-    reviewer
-)
+    topic = input("Enter Topic: ")
 
-crew = create_crew(
-    researcher,
-    writer,
-    reviewer,
-    tasks
-)
+    tasks = create_tasks(topic)
 
-result = crew.kickoff()
+    crew = create_crew(
+        researcher_agent,
+        writer_agent,
+        reviewer_agent,
+        manager_agent,
+        tasks
+    )
 
-print("\n")
-print("="*80)
-print("FINAL OUTPUT")
-print("="*80)
-print(result)
+    result = crew.kickoff()
+
+    print("\n")
+    print("=" * 80)
+    print("FINAL RESULT")
+    print("=" * 80)
+    print(result)
+
+if __name__ == "__main__":
+    main()

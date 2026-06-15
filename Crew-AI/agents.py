@@ -1,28 +1,131 @@
-from crewai import Agent
-from langchain_ollama import ChatOllama
+from crewai import Agent, LLM
+from dotenv import load_dotenv
+from tools import search_tool
 
-llm = ChatOllama(model="llama3.2:3b", temperature=0.7)
+load_dotenv()
 
-researcher = Agent(
-    llm=llm,
-    role="Senior Researcher Analyst",
-    goal="Conduct in-depth research and analysis on complex topics",
-    backstory="You are a seasoned researcher with a keen eye for detail and a passion for uncovering the truth behind various phenomena."
-    verbose=True
+# =====================================================
+# MANAGER (GEMINI)
+# =====================================================
+
+manager_llm = LLM(
+    model="gemini/gemini-2.5-flash",
+    temperature=0
 )
 
-writer = Agent(
-    llm=llm,
-    role="Creative Writer",
-    goal="Craft engaging and compelling narratives based on research findings",
-    backstory="You are a talented writer with a flair for storytelling, capable of transforming complex research into captivating articles that resonate with readers.",
-    verbose=True
+# =====================================================
+# WORKERS (OLLAMA)
+# =====================================================
+
+worker_llm = LLM(
+    model="ollama/mistral:7b",
+    base_url="http://localhost:11434",
+    temperature=0.3
 )
 
-reviewer = Agent(
-    llm=llm,
-    role="Critical Reviewer",
-    goal="Provide constructive feedback and critical analysis to improve the quality of written content",
-    backstory="You are a meticulous reviewer with a sharp eye for detail, dedicated to enhancing the clarity, coherence, and overall quality of written work through thoughtful critique and suggestions.",
-    verbose=True
+# =====================================================
+# RESEARCHER
+# =====================================================
+
+researcher_agent = Agent(
+    role="Senior Research Analyst",
+
+    goal="""
+    Always search the internet first.
+    Gather current information.
+    Verify facts.
+    Produce research findings.
+    """,
+
+    backstory="""
+    You are an expert research analyst.
+
+    RULES:
+
+    - Search before answering.
+    - Validate findings.
+    - Use internet results.
+    - Never depend entirely on memory.
+    """,
+
+    tools=[search_tool],
+
+    llm=worker_llm,
+
+    verbose=True,
+
+    allow_delegation=False
+)
+
+# =====================================================
+# WRITER
+# =====================================================
+
+writer_agent = Agent(
+    role="Technical Content Writer",
+    goal="Convert research into professional content",
+    backstory="""
+    You are an expert content writer.
+
+    Responsibilities:
+    - Write articles
+    - Structure content
+    - Explain concepts clearly
+
+    Never perform research.
+    Only write.
+    """,
+    llm=worker_llm,
+    verbose=True,
+    allow_delegation=False,
+    max_iter=5
+)
+
+# =====================================================
+# REVIEWER
+# =====================================================
+
+reviewer_agent = Agent(
+    role="Senior Editor",
+    goal="Review and improve content quality",
+    backstory="""
+    You are a professional editor.
+
+    Responsibilities:
+    - Grammar checking
+    - Fact consistency
+    - Improve readability
+    - Final publication review
+
+    Only review.
+    """,
+    llm=worker_llm,
+    verbose=True,
+    allow_delegation=False,
+    max_iter=5
+)
+
+# =====================================================
+# MANAGER
+# =====================================================
+
+manager_agent = Agent(
+    role="Project Manager",
+    goal="Delegate work to the most appropriate specialist and ensure delivery",
+    backstory="""
+    You are an experienced project manager.
+
+    You do not execute tasks yourself.
+
+    You analyze work and delegate it to:
+    - Researcher
+    - Writer
+    - Reviewer
+
+    Your responsibility is orchestration.
+    """,
+    llm=manager_llm,
+    allow_delegation=True,
+    verbose=True,
+    max_iter=10
 )
