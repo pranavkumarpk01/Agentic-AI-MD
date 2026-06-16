@@ -18,6 +18,8 @@ def create_crew(
         manager_agent=manager_agent,
         process=Process.hierarchical,
         verbose=True,
-        memory=False,
+
+        memory=True,
+
         planning=False
     )
