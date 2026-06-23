@@ -1,3 +1,5 @@
 langgraph>=0.6.0
 langchain-core>=0.3.0
 grandalf
+
+langgraph-checkpoint

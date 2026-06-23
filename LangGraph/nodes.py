@@ -1,4 +1,8 @@
 from state import TravelState
+from memory_store import (
+    load_user_memory,
+    save_user_memory
+)
 
 def start_node(state: TravelState):
     print("\n[Node] START NODE")
@@ -38,3 +42,59 @@ def validation_router(state: TravelState):
         return "approved"
     else:
         return "retry"
+
+def load_memory(state):
+
+    print("\n[Node] LOAD MEMORY")
+
+    memory = load_user_memory(
+        state["user_id"]
+    )
+
+    print(
+        f"Loaded Memory: {memory}"
+    )
+
+    return {
+        "user_preference": memory
+    }
+
+def save_memory(state):
+
+    print("\n[Node] SAVE MEMORY")
+
+    save_user_memory(
+        state["user_id"],
+        f"Preferred Destination: "
+        f"{state['destination']}"
+    )
+
+    return {}    
+
+def approval_node(state):
+
+    print("\n[Node] HUMAN APPROVAL")
+
+    print(
+        "\nGenerated Trip:\n"
+    )
+
+    print(
+        state["itinerary"]
+    )
+
+    answer = input(
+        "\nApprove Trip? (yes/no): "
+    )
+
+    return {
+        "approved":
+            answer.lower() == "yes"
+    }
+
+def approval_router(state):
+
+    if state["approved"]:
+        return "approved"
+
+    return "rejected"
