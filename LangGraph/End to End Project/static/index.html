@@ -1,0 +1,891 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Research Intelligence Agent</title>
+<style>
+  /* ── Variables ────────────────────────────────────────────────── */
+  :root {
+    --bg:       #08080f;
+    --s1:       #111118;
+    --s2:       #18181f;
+    --s3:       #22222c;
+    --border:   #2a2a38;
+    --text:     #e0e0f0;
+    --muted:    #6e6e90;
+    --purple:   #8b5cf6;
+    --purple2:  #6366f1;
+    --blue:     #3b82f6;
+    --cyan:     #06b6d4;
+    --green:    #10b981;
+    --amber:    #f59e0b;
+    --red:      #ef4444;
+    --orange:   #f97316;
+  }
+
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: -apple-system, 'Inter', 'Segoe UI', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    height: 100vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ── Header ───────────────────────────────────────────────────── */
+  header {
+    background: var(--s1);
+    border-bottom: 1px solid var(--border);
+    padding: 10px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .logo-icon {
+    width: 34px; height: 34px;
+    background: linear-gradient(135deg, var(--purple), var(--blue));
+    border-radius: 9px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 17px;
+  }
+
+  .logo-text { font-size: 16px; font-weight: 700; letter-spacing: -0.3px; }
+  .logo-sub  { font-size: 11px; color: var(--muted); margin-top: 1px; }
+
+  .chips { display: flex; gap: 8px; }
+
+  .chip {
+    display: flex; align-items: center; gap: 5px;
+    font-size: 11px; color: var(--muted);
+    background: var(--s2); border: 1px solid var(--border);
+    padding: 4px 10px; border-radius: 20px;
+  }
+  .dot { width: 6px; height: 6px; border-radius: 50%; }
+
+  /* ── Main layout ──────────────────────────────────────────────── */
+  .main { flex: 1; display: flex; overflow: hidden; }
+
+  /* ── Left — Chat ──────────────────────────────────────────────── */
+  .chat-panel {
+    width: 52%;
+    display: flex;
+    flex-direction: column;
+    border-right: 1px solid var(--border);
+  }
+
+  .panel-title {
+    padding: 10px 18px;
+    border-bottom: 1px solid var(--border);
+    font-size: 11px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: .08em;
+    color: var(--muted);
+    display: flex; align-items: center; justify-content: space-between;
+    flex-shrink: 0;
+  }
+
+  /* Graph mini-map in panel title */
+  .graph-map {
+    display: flex; align-items: center; gap: 3px;
+    flex-wrap: wrap;
+  }
+
+  .gm-node {
+    font-size: 10px; padding: 2px 6px;
+    border-radius: 4px;
+    background: var(--s3); border: 1px solid var(--border);
+    color: var(--muted);
+    transition: all .25s;
+    cursor: default;
+  }
+  .gm-node.active  { border-color: var(--purple); color: var(--purple); background: rgba(139,92,246,.12); }
+  .gm-node.done    { border-color: var(--green);  color: var(--green);  background: rgba(16,185,129,.08); }
+  .gm-node.errored { border-color: var(--red);    color: var(--red);    background: rgba(239,68,68,.08);  }
+  .gm-arr { color: var(--border); font-size: 10px; }
+
+  /* Messages */
+  .messages {
+    flex: 1; overflow-y: auto;
+    padding: 18px; display: flex; flex-direction: column; gap: 14px;
+  }
+
+  .msg { max-width: 88%; animation: fadeUp .3s ease; }
+  .msg.user      { align-self: flex-end; }
+  .msg.assistant { align-self: flex-start; }
+  .msg.system    { align-self: center; }
+
+  .msg-label { font-size: 11px; color: var(--muted); margin-bottom: 4px; padding: 0 4px; }
+
+  .msg-bubble {
+    padding: 11px 15px;
+    border-radius: 12px;
+    font-size: 13.5px; line-height: 1.65;
+  }
+
+  .msg.user .msg-bubble {
+    background: linear-gradient(135deg, var(--purple), var(--purple2));
+    color: #fff; border-bottom-right-radius: 3px;
+  }
+
+  .msg.assistant .msg-bubble {
+    background: var(--s2); border: 1px solid var(--border);
+    border-bottom-left-radius: 3px;
+  }
+
+  .msg.system .msg-bubble {
+    background: var(--s3); border: 1px dashed var(--border);
+    font-size: 12px; color: var(--muted);
+    border-radius: 8px;
+  }
+
+  /* Input */
+  .input-area {
+    padding: 14px 18px;
+    border-top: 1px solid var(--border);
+    display: flex; flex-direction: column; gap: 9px;
+    flex-shrink: 0;
+  }
+
+  .input-row { display: flex; gap: 8px; align-items: center; }
+  .input-label { font-size: 11px; color: var(--muted); white-space: nowrap; }
+
+  input[type="text"], textarea {
+    background: var(--s2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 12px;
+    color: var(--text);
+    font-size: 13px;
+    outline: none;
+    transition: border-color .2s;
+    font-family: inherit;
+  }
+  input[type="text"]:focus, textarea:focus { border-color: var(--purple); }
+  input[type="text"]::placeholder, textarea::placeholder { color: var(--muted); }
+
+  .uid-input { width: 110px; }
+
+  .query-wrap { display: flex; gap: 8px; }
+  .query-input { flex: 1; resize: none; height: 44px; line-height: 1.5; }
+
+  .send-btn {
+    background: linear-gradient(135deg, var(--purple), var(--purple2));
+    border: none; border-radius: 8px;
+    padding: 0 20px; height: 44px;
+    color: #fff; font-size: 13px; font-weight: 600;
+    cursor: pointer; white-space: nowrap;
+    transition: opacity .2s, transform .1s;
+  }
+  .send-btn:hover   { opacity: .88; }
+  .send-btn:active  { transform: scale(.97); }
+  .send-btn:disabled { opacity: .4; cursor: not-allowed; }
+
+  /* ── Right — Trace + Memory ────────────────────────────────────── */
+  .right-panel { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+
+  .trace-wrap { flex: 1; overflow-y: auto; padding: 12px; display: flex; flex-direction: column; gap: 7px; }
+
+  /* Trace items */
+  .trace-item {
+    display: flex; align-items: flex-start; gap: 10px;
+    padding: 9px 13px;
+    background: var(--s2);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--border);
+    border-radius: 8px;
+    font-size: 12.5px;
+    animation: slideIn .25s ease;
+  }
+
+  .trace-item.llm     { border-left-color: var(--purple); }
+  .trace-item.tool    { border-left-color: var(--cyan);   }
+  .trace-item.memory  { border-left-color: var(--green);  }
+  .trace-item.human   { border-left-color: var(--amber);  }
+  .trace-item.error   { border-left-color: var(--red);    background: rgba(239,68,68,.04); }
+  .trace-item.success { border-left-color: var(--green);  background: rgba(16,185,129,.04); }
+  .trace-item.system  { border-left-color: var(--muted);  }
+
+  .ti-icon { font-size: 15px; flex-shrink: 0; margin-top: 1px; }
+  .ti-body { flex: 1; min-width: 0; }
+
+  .ti-node {
+    font-size: 10.5px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: .06em;
+    margin-bottom: 3px;
+  }
+  .trace-item.llm    .ti-node { color: var(--purple); }
+  .trace-item.tool   .ti-node { color: var(--cyan);   }
+  .trace-item.memory .ti-node { color: var(--green);  }
+  .trace-item.human  .ti-node { color: var(--amber);  }
+  .trace-item.error  .ti-node { color: var(--red);    }
+  .trace-item.success .ti-node { color: var(--green); }
+  .trace-item.system .ti-node { color: var(--muted);  }
+
+  .ti-detail { color: var(--muted); font-size: 12px; line-height: 1.55; }
+  .ti-time   { font-size: 10px; color: var(--muted); flex-shrink: 0; }
+
+  /* ── Error / Checkpoint banner ────────────────────────────────── */
+  .error-banner {
+    margin: 12px;
+    background: rgba(239,68,68,.06);
+    border: 1px solid rgba(239,68,68,.25);
+    border-radius: 10px; padding: 16px;
+    animation: fadeUp .3s ease;
+    flex-shrink: 0;
+  }
+  .err-title {
+    color: var(--red); font-weight: 700; font-size: 13px;
+    margin-bottom: 6px; display: flex; align-items: center; gap: 6px;
+  }
+  .err-msg {
+    font-size: 11.5px; color: var(--muted);
+    font-family: 'Menlo', 'Courier New', monospace;
+    line-height: 1.6; margin-bottom: 14px;
+    white-space: pre-wrap;
+  }
+  .cp-box {
+    background: rgba(245,158,11,.06);
+    border: 1px solid rgba(245,158,11,.2);
+    border-radius: 7px; padding: 11px 14px; margin-bottom: 12px;
+  }
+  .cp-title { color: var(--amber); font-size: 11.5px; font-weight: 700; margin-bottom: 5px; }
+  .cp-detail { font-size: 11px; color: var(--muted); line-height: 1.6; }
+  .cp-detail code { color: var(--amber); font-family: monospace; }
+
+  .retry-btn {
+    width: 100%; padding: 10px;
+    background: linear-gradient(135deg, var(--amber), #d97706);
+    border: none; border-radius: 7px;
+    color: #fff; font-size: 13px; font-weight: 600;
+    cursor: pointer; transition: opacity .2s;
+  }
+  .retry-btn:hover { opacity: .88; }
+
+  /* ── Memory panel ─────────────────────────────────────────────── */
+  .memory-panel {
+    border-top: 1px solid var(--border);
+    padding: 11px 14px;
+    flex-shrink: 0; max-height: 130px; overflow-y: auto;
+  }
+  .mem-header {
+    font-size: 11px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: .07em;
+    color: var(--green); margin-bottom: 8px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .mem-clear-btn {
+    background: none; border: 1px solid var(--border);
+    color: var(--muted); padding: 2px 7px;
+    border-radius: 4px; cursor: pointer; font-size: 10px;
+  }
+  .mem-clear-btn:hover { border-color: var(--red); color: var(--red); }
+
+  .mem-fact {
+    font-size: 11.5px; color: var(--muted);
+    padding: 4px 8px; margin-bottom: 3px;
+    background: rgba(16,185,129,.04);
+    border-left: 2px solid var(--green);
+    border-radius: 2px; line-height: 1.5;
+  }
+  .mem-empty { font-size: 12px; color: var(--muted); font-style: italic; }
+
+  /* ── Approval modal ───────────────────────────────────────────── */
+  .overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,.72);
+    backdrop-filter: blur(5px);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 200; animation: fadeIn .2s ease;
+  }
+
+  .modal {
+    background: var(--s1);
+    border: 1px solid var(--border);
+    border-radius: 16px; padding: 26px;
+    width: 520px; max-width: 92vw; max-height: 82vh;
+    overflow-y: auto;
+    box-shadow: 0 25px 70px rgba(0,0,0,.55);
+    animation: scaleIn .2s ease;
+  }
+
+  .modal-title {
+    font-size: 17px; font-weight: 700; margin-bottom: 4px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .modal-sub { font-size: 12.5px; color: var(--muted); margin-bottom: 18px; }
+  .sec-title {
+    font-size: 10.5px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: .09em;
+    color: var(--muted); margin-bottom: 8px;
+  }
+  .summary-box {
+    background: var(--s2); border: 1px solid var(--border);
+    border-radius: 8px; padding: 13px;
+    font-size: 13px; line-height: 1.7;
+    max-height: 180px; overflow-y: auto; margin-bottom: 16px;
+  }
+  .fact-pill {
+    display: flex; align-items: flex-start; gap: 8px;
+    padding: 8px 11px; margin-bottom: 5px;
+    background: rgba(16,185,129,.05);
+    border: 1px solid rgba(16,185,129,.18);
+    border-radius: 6px; font-size: 12.5px; line-height: 1.5;
+  }
+  .no-facts { font-size: 12.5px; color: var(--muted); font-style: italic; }
+
+  .modal-actions { display: flex; gap: 9px; margin-top: 18px; }
+
+  .btn {
+    flex: 1; padding: 11px;
+    border-radius: 7px; border: none;
+    font-size: 13px; font-weight: 600;
+    cursor: pointer; transition: all .18s;
+  }
+  .btn:hover { opacity: .88; transform: translateY(-1px); }
+
+  .btn-approve {
+    background: linear-gradient(135deg, var(--green), #059669);
+    color: #fff;
+  }
+  .btn-reject {
+    background: var(--s2);
+    border: 1px solid var(--border);
+    color: var(--muted);
+  }
+
+  /* ── Animations ───────────────────────────────────────────────── */
+  @keyframes fadeUp   { from { opacity:0; transform:translateY(8px);  } to { opacity:1; transform:none; } }
+  @keyframes slideIn  { from { opacity:0; transform:translateX(10px); } to { opacity:1; transform:none; } }
+  @keyframes fadeIn   { from { opacity:0; } to { opacity:1; } }
+  @keyframes scaleIn  { from { opacity:0; transform:scale(.95); } to { opacity:1; transform:scale(1); } }
+  @keyframes pulse    { 0%,100% { opacity:1; } 50% { opacity:.35; } }
+
+  .blinking { animation: pulse 1.2s infinite; }
+
+  /* ── Scrollbars ───────────────────────────────────────────────── */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  .hidden { display: none !important; }
+</style>
+</head>
+<body>
+
+<!-- ── Header ─────────────────────────────────────────────────────────── -->
+<header>
+  <div class="logo">
+    <div class="logo-icon">🧠</div>
+    <div>
+      <div class="logo-text">Research Intelligence Agent</div>
+      <div class="logo-sub">LangGraph · Ollama · Redis · SerpAPI · SQLite Checkpoints</div>
+    </div>
+  </div>
+  <div class="chips">
+    <div class="chip"><div class="dot" style="background:var(--purple)"></div>llama3.2</div>
+    <div class="chip"><div class="dot" style="background:var(--green)"></div>Redis Memory</div>
+    <div class="chip"><div class="dot" style="background:var(--amber)"></div>SQLite Checkpoints</div>
+    <div class="chip" id="statusChip"><div class="dot" style="background:var(--muted)"></div><span id="statusText">Idle</span></div>
+  </div>
+</header>
+
+<!-- ── Main ────────────────────────────────────────────────────────────── -->
+<div class="main">
+
+  <!-- LEFT: Chat -->
+  <div class="chat-panel">
+    <div class="panel-title">
+      <span>💬 Chat</span>
+      <!-- Graph mini-map shows which node is active -->
+      <div class="graph-map" id="graphMap">
+        <div class="gm-node" id="gm-load_memory"   title="Loads facts from Redis">load_memory</div>
+        <div class="gm-arr">→</div>
+        <div class="gm-node" id="gm-decide_search"  title="LLM decides if search needed">decide_search</div>
+        <div class="gm-arr">→</div>
+        <div class="gm-node" id="gm-search_web"     title="SerpAPI tool call">search_web</div>
+        <div class="gm-arr">→</div>
+        <div class="gm-node" id="gm-summarize"      title="LLM summarizes findings">summarize</div>
+        <div class="gm-arr">→</div>
+        <div class="gm-node" id="gm-extract_memory" title="LLM picks facts to save">extract_memory</div>
+        <div class="gm-arr">→</div>
+        <div class="gm-node" id="gm-human_approval" title="Human-in-the-loop pause">human_approval</div>
+        <div class="gm-arr">→</div>
+        <div class="gm-node" id="gm-save_memory"    title="Saves to Redis">save_memory</div>
+        <div class="gm-arr">→</div>
+        <div class="gm-node" id="gm-save_to_db"     title="⚠ Intentionally broken!">save_to_db</div>
+      </div>
+    </div>
+
+    <div class="messages" id="messages">
+      <div class="msg assistant">
+        <div class="msg-label">Agent</div>
+        <div class="msg-bubble">
+          👋 Hi! I'm your <strong>Research Intelligence Agent</strong>.<br><br>
+          Ask me anything — I'll search the web with SerpAPI, summarize with Ollama,
+          and let my LLM decide which facts are worth remembering in Redis.<br><br>
+          After research, you'll be asked to <strong>approve</strong> before facts are saved.
+          Then watch a <strong>node crash</strong> and see checkpointing rescue the day! 🔥<br><br>
+          Try: <em>"What is LangGraph and how does it work?"</em>
+        </div>
+      </div>
+    </div>
+
+    <div class="input-area">
+      <div class="input-row">
+        <span class="input-label">User ID:</span>
+        <input type="text" class="uid-input" id="userId" value="pranav" />
+        <span class="input-label" style="margin-left:8px">Thread:</span>
+        <span id="threadDisplay" style="font-size:11px;color:var(--muted);font-family:monospace">—</span>
+      </div>
+      <div class="query-wrap">
+        <textarea class="query-input" id="queryInput"
+          placeholder="Ask me to research anything…"
+          onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendQuery();}"></textarea>
+        <button class="send-btn" id="sendBtn" onclick="sendQuery()">Research →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT: Trace + Memory -->
+  <div class="right-panel">
+    <div class="panel-title">
+      <span>⚡ Live Execution Trace</span>
+      <span id="traceStatus" style="font-size:11px;color:var(--muted)">Idle — submit a query to start</span>
+    </div>
+
+    <div class="trace-wrap" id="traceWrap">
+      <div style="text-align:center;color:var(--muted);font-size:12.5px;padding:40px 20px;line-height:2">
+        Nodes will appear here in real-time as the agent executes.<br>
+        <span style="color:var(--purple)">■</span> LLM calls &nbsp;
+        <span style="color:var(--cyan)">■</span> Tool calls &nbsp;
+        <span style="color:var(--green)">■</span> Memory ops &nbsp;
+        <span style="color:var(--amber)">■</span> Human-in-loop &nbsp;
+        <span style="color:var(--red)">■</span> Errors
+      </div>
+    </div>
+
+    <!-- Error/checkpoint banner injected here dynamically -->
+    <div id="errorBanner" class="hidden"></div>
+
+    <!-- Redis memory panel -->
+    <div class="memory-panel">
+      <div class="mem-header">
+        🧠 Redis Memory — <span id="memUserId">pranav</span>
+        <button class="mem-clear-btn" onclick="clearMemory()">Clear</button>
+      </div>
+      <div id="memFacts">
+        <div class="mem-empty">No facts stored yet — run a query and approve saving</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ── Approval Modal ──────────────────────────────────────────────────── -->
+<div class="overlay hidden" id="approvalOverlay">
+  <div class="modal">
+    <div class="modal-title">⏸ Human Review Required</div>
+    <div class="modal-sub">
+      The agent completed research. Review the summary and facts before saving to memory.
+    </div>
+
+    <div class="sec-title">📄 Research Summary</div>
+    <div class="summary-box" id="modalSummary"></div>
+
+    <div class="sec-title">💾 Facts LLM Wants to Save to Redis Memory</div>
+    <div id="modalFacts"></div>
+
+    <div class="modal-actions">
+      <button class="btn btn-reject"  onclick="decide(false)">✕ Reject — Don't Save</button>
+      <button class="btn btn-approve" onclick="decide(true)">✓ Approve &amp; Save to Memory</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Script ──────────────────────────────────────────────────────────── -->
+<script>
+/* ── State ──────────────────────────────────────────────────────── */
+let threadId    = null;
+let evtSource   = null;
+let evtCursor   = 0;
+
+/* ── Node config: type determines trace color and icon ─────────── */
+const NODES = {
+  load_memory:    { type: 'memory', icon: '📚', label: 'Load Memory (Redis)'         },
+  decide_search:  { type: 'llm',    icon: '🤔', label: 'LLM Decision — Search?'      },
+  search_web:     { type: 'tool',   icon: '🔍', label: 'SerpAPI Web Search'           },
+  summarize:      { type: 'llm',    icon: '✍️',  label: 'LLM Summarize'               },
+  extract_memory: { type: 'llm',    icon: '💡', label: 'LLM — What to Remember?'     },
+  human_approval: { type: 'human',  icon: '⏸',  label: 'Human Approval'              },
+  save_memory:    { type: 'memory', icon: '💾', label: 'Save Facts → Redis'           },
+  save_to_db:     { type: 'system', icon: '🗄️', label: 'Save to DB (⚠ broken demo)'  },
+};
+
+/* ── Helpers ─────────────────────────────────────────────────────── */
+function ts() {
+  return new Date().toLocaleTimeString('en-US', {
+    hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit'
+  });
+}
+
+function addTrace(nodeKey, detail, overrideType) {
+  const cfg = NODES[nodeKey] || { type: overrideType || 'system', icon: '⚙️', label: nodeKey };
+  const type = overrideType || cfg.type;
+
+  const el = document.createElement('div');
+  el.className = `trace-item ${type}`;
+  el.innerHTML = `
+    <div class="ti-icon">${cfg.icon}</div>
+    <div class="ti-body">
+      <div class="ti-node">${cfg.label}</div>
+      <div class="ti-detail">${detail || ''}</div>
+    </div>
+    <div class="ti-time">${ts()}</div>
+  `;
+  document.getElementById('traceWrap').appendChild(el);
+  document.getElementById('traceWrap').scrollTop = 9999;
+
+  // Highlight graph mini-map
+  const gmNode = document.getElementById(`gm-${nodeKey}`);
+  if (gmNode) {
+    document.querySelectorAll('.gm-node').forEach(n => n.classList.remove('active'));
+    gmNode.classList.add('active');
+    setTimeout(() => {
+      gmNode.classList.remove('active');
+      if (overrideType !== 'error') gmNode.classList.add('done');
+      else gmNode.classList.add('errored');
+    }, 1800);
+  }
+}
+
+function addChat(role, text) {
+  const c = document.getElementById('messages');
+  const d = document.createElement('div');
+  d.className = `msg ${role}`;
+  const label = role === 'user' ? 'You' : role === 'assistant' ? 'Agent' : 'System';
+  d.innerHTML = `
+    <div class="msg-label">${label}</div>
+    <div class="msg-bubble">${text.replace(/\n/g,'<br>').replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>')}</div>
+  `;
+  c.appendChild(d);
+  c.scrollTop = 9999;
+}
+
+function setStatus(text, color) {
+  document.getElementById('statusText').textContent = text;
+  const chip = document.getElementById('statusChip');
+  const dot  = chip.querySelector('.dot');
+  dot.style.background = color || 'var(--muted)';
+}
+
+function resetMiniMap() {
+  document.querySelectorAll('.gm-node').forEach(n => {
+    n.classList.remove('active','done','errored');
+  });
+}
+
+/* ── Send query ──────────────────────────────────────────────────── */
+async function sendQuery() {
+  const query  = document.getElementById('queryInput').value.trim();
+  const userId = document.getElementById('userId').value.trim() || 'user1';
+  if (!query) return;
+
+  document.getElementById('sendBtn').disabled = true;
+  document.getElementById('queryInput').value = '';
+  document.getElementById('errorBanner').classList.add('hidden');
+  document.getElementById('traceWrap').innerHTML = '';
+  resetMiniMap();
+  evtCursor = 0;
+
+  document.getElementById('memUserId').textContent = userId;
+  setStatus('Running…', 'var(--purple)');
+  document.getElementById('traceStatus').textContent = 'Running graph…';
+
+  addChat('user', query);
+
+  const res  = await fetch('/research', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ query, user_id: userId }),
+  });
+  const data = await res.json();
+  threadId   = data.thread_id;
+
+  document.getElementById('threadDisplay').textContent =
+    threadId.substring(0, 8) + '…';
+
+  openSSE();
+  loadMemory(userId);
+}
+
+/* ── SSE connection ──────────────────────────────────────────────── */
+function openSSE() {
+  if (evtSource) evtSource.close();
+  evtSource = new EventSource(`/events/${threadId}?since=${evtCursor}`);
+
+  evtSource.onmessage = (e) => {
+    evtCursor++;
+    handle(JSON.parse(e.data));
+  };
+
+  evtSource.onerror = () => {
+    evtSource.close();
+  };
+}
+
+/* ── Event dispatcher ─────────────────────────────────────────────── */
+function handle(evt) {
+  switch (evt.type) {
+
+    case 'node_update':
+      handleNodeUpdate(evt.node, evt.data || {});
+      break;
+
+    case 'interrupt':
+      setStatus('⏸ Awaiting Approval', 'var(--amber)');
+      document.getElementById('traceStatus').textContent = '⏸ Paused — waiting for your review';
+      addTrace('human_approval', 'Graph paused — human review required before saving', 'human');
+      showModal(evt.summary, evt.memory_facts);
+      evtSource.close();
+      break;
+
+    case 'error':
+      handleError(evt);
+      evtSource.close();
+      break;
+
+    case 'done':
+      setStatus('✓ Done', 'var(--green)');
+      document.getElementById('traceStatus').textContent = '✓ Completed';
+      addTrace('__done__', 'All nodes completed successfully ✓', 'success');
+      addChat('system', '✅ Research complete! Memory updated.');
+      document.getElementById('sendBtn').disabled = false;
+      setTimeout(() => loadMemory(document.getElementById('userId').value), 600);
+      evtSource.close();
+      break;
+  }
+}
+
+/* ── Handle node_update events ────────────────────────────────────── */
+function handleNodeUpdate(nodeName, data) {
+  let detail = '';
+
+  switch (nodeName) {
+
+    case 'load_memory': {
+      const facts = data.past_memory || [];
+      detail = facts.length > 0
+        ? `Loaded <strong>${facts.length} facts</strong> from Redis`
+        : 'No previous memory — starting fresh';
+      break;
+    }
+
+    case 'decide_search': {
+      const msgs = data.messages || [];
+      const text = (msgs[0] || {}).content || '';
+      const needs = data.needs_search;
+      detail = text
+        ? text.replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>')
+        : (needs ? '→ Web search required' : '→ Memory is sufficient, skipping search');
+      if (text) addChat('assistant', text);
+      break;
+    }
+
+    case 'search_web': {
+      const results = data.search_results || [];
+      detail = `SerpAPI returned <strong>${results.length} results</strong>`;
+      if (results[0]) detail += `<br><span style="opacity:.65;font-size:11px">${results[0].substring(0,90)}…</span>`;
+      break;
+    }
+
+    case 'summarize': {
+      const msgs = data.messages || [];
+      const summary = (msgs[0] || {}).content || '';
+      if (summary) {
+        detail = summary.substring(0, 130) + (summary.length > 130 ? '…' : '');
+        addChat('assistant', summary);
+      }
+      break;
+    }
+
+    case 'extract_memory': {
+      const facts = data.memory_facts || [];
+      const msgs  = data.messages || [];
+      const text  = (msgs[0] || {}).content || '';
+      if (facts.length > 0) {
+        detail = `LLM selected <strong>${facts.length} fact(s)</strong> to remember:<br>`
+               + facts.map(f => `• ${f.substring(0,70)}`).join('<br>');
+      } else {
+        detail = 'LLM decided: nothing from this research is worth saving long-term';
+      }
+      if (text) addChat('assistant', text);
+      break;
+    }
+
+    case 'human_approval':
+      detail = 'Human decision applied → proceeding';
+      break;
+
+    case 'save_memory': {
+      const msgs = data.messages || [];
+      const text = (msgs[0] || {}).content || 'Facts saved to Redis';
+      detail = text;
+      break;
+    }
+
+    case 'save_to_db': {
+      const msgs = data.messages || [];
+      detail = (msgs[0] || {}).content || 'Saved to database ✓';
+      break;
+    }
+
+    default:
+      detail = JSON.stringify(data).substring(0, 120);
+  }
+
+  addTrace(nodeName, detail);
+}
+
+/* ── Handle error ─────────────────────────────────────────────────── */
+function handleError(evt) {
+  const msg = (evt.message || 'Unknown error').replace(/\n/g, '\n');
+  const tid = evt.thread_id || threadId;
+
+  setStatus('💥 Error', 'var(--red)');
+  document.getElementById('traceStatus').textContent = '💥 Node crashed';
+  document.getElementById('sendBtn').disabled = false;
+
+  // Mark save_to_db as errored
+  const gmNode = document.getElementById('gm-save_to_db');
+  if (gmNode) { gmNode.classList.remove('active','done'); gmNode.classList.add('errored'); }
+
+  addTrace('save_to_db', `💥 CRASH: ${msg.substring(0,100)}`, 'error');
+
+  const banner = document.getElementById('errorBanner');
+  banner.classList.remove('hidden');
+  banner.innerHTML = `
+    <div class="error-banner">
+      <div class="err-title">💥 save_to_db Node Crashed</div>
+      <div class="err-msg">${msg}</div>
+
+      <div class="cp-box">
+        <div class="cp-title">📸 Checkpoint Saved — No Data Lost!</div>
+        <div class="cp-detail">
+          LangGraph checkpoints state <strong>before</strong> each node runs.<br>
+          The crash happened at <code>save_to_db</code>, but the checkpoint exists<br>
+          right before that node — all previous work is safe in <code>checkpoints.db</code>.<br><br>
+          <strong>Thread:</strong> <code>${tid.substring(0,16)}…</code><br>
+          <strong>Last safe node:</strong> <code>save_memory</code> ✓
+        </div>
+      </div>
+
+      <button class="retry-btn" onclick="retryFromCheckpoint('${tid}')">
+        🔧 Fix Bug &amp; Resume from Checkpoint
+      </button>
+    </div>
+  `;
+}
+
+/* ── Approval modal ───────────────────────────────────────────────── */
+function showModal(summary, facts) {
+  document.getElementById('modalSummary').innerHTML =
+    (summary || 'No summary').replace(/\n/g,'<br>');
+
+  const fc = document.getElementById('modalFacts');
+  if (facts && facts.length > 0) {
+    fc.innerHTML = facts.map(f =>
+      `<div class="fact-pill">💾 ${f}</div>`
+    ).join('');
+  } else {
+    fc.innerHTML = '<div class="no-facts">LLM decided no facts are worth saving from this research</div>';
+  }
+
+  document.getElementById('approvalOverlay').classList.remove('hidden');
+}
+
+async function decide(approved) {
+  document.getElementById('approvalOverlay').classList.add('hidden');
+
+  addTrace('human_approval',
+    approved
+      ? '✅ Approved — saving facts to Redis memory'
+      : '✕ Rejected — facts discarded',
+    approved ? 'success' : 'system'
+  );
+
+  setStatus('Resuming…', 'var(--purple)');
+  document.getElementById('traceStatus').textContent = 'Resuming after human approval…';
+
+  await fetch(`/approve/${threadId}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ approved }),
+  });
+
+  openSSE();
+}
+
+/* ── Retry from checkpoint ─────────────────────────────────────────── */
+async function retryFromCheckpoint(tid) {
+  document.getElementById('errorBanner').classList.add('hidden');
+
+  const gmNode = document.getElementById('gm-save_to_db');
+  if (gmNode) gmNode.classList.remove('errored');
+
+  setStatus('Resuming from checkpoint…', 'var(--amber)');
+  document.getElementById('traceStatus').textContent = 'Resuming from checkpoint…';
+  document.getElementById('sendBtn').disabled = true;
+
+  addTrace('save_to_db',
+    '🔧 Applying fix: <code>skip_db=True</code> injected into checkpoint state<br>' +
+    'Resuming graph from last checkpoint (right before <strong>save_to_db</strong>)…',
+    'system'
+  );
+
+  await fetch(`/retry/${tid}`, { method: 'POST' });
+  openSSE();
+}
+
+/* ── Memory ────────────────────────────────────────────────────────── */
+async function loadMemory(userId) {
+  userId = userId || document.getElementById('userId').value;
+  try {
+    const res  = await fetch(`/memory/${userId}`);
+    const data = await res.json();
+    const c    = document.getElementById('memFacts');
+    if (data.facts && data.facts.length > 0) {
+      c.innerHTML = data.facts.map(f =>
+        `<div class="mem-fact">${f}</div>`
+      ).join('');
+    } else {
+      c.innerHTML = '<div class="mem-empty">No facts stored yet</div>';
+    }
+  } catch(e) { /* Redis not ready */ }
+}
+
+async function clearMemory() {
+  const uid = document.getElementById('userId').value;
+  await fetch(`/memory/${uid}`, { method: 'DELETE' });
+  loadMemory(uid);
+}
+
+/* ── Init ───────────────────────────────────────────────────────────── */
+loadMemory();
+document.getElementById('userId').addEventListener('change', e => {
+  document.getElementById('memUserId').textContent = e.target.value;
+  loadMemory(e.target.value);
+});
+</script>
+</body>
+</html>

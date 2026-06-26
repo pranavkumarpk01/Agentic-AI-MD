@@ -1,0 +1,75 @@
+=========================================
+  RESEARCH INTELLIGENCE AGENT — SETUP
+=========================================
+
+WHAT THIS DEMONSTRATES:
+  ✅ LangGraph architecture (nodes, edges, conditional routing)
+  ✅ Ollama LLM calling (llama3.2 for decisions + summarization)
+  ✅ SerpAPI tool calling (web search)
+  ✅ Redis memory via Docker (LLM decides what to store)
+  ✅ Human-in-the-loop (approve/reject before saving)
+  ✅ SQLite checkpointing (survive crashes, resume exactly)
+  ✅ Intentional node crash + checkpoint recovery demo
+
+GRAPH FLOW:
+  START
+    → load_memory      [Redis: load past facts]
+    → decide_search    [LLM: is web search needed?]
+    → search_web       [SerpAPI tool: only if LLM says yes]
+    → summarize        [LLM: synthesize results]
+    → extract_memory   [LLM: what's worth saving?]
+    ⏸  human_approval  [INTERRUPT: you review before saving]
+    → save_memory      [Redis: persist approved facts]
+    → save_to_db       [💥 INTENTIONALLY CRASHES — shows checkpointing]
+  END
+
+
+STEP 1: Start Redis (Docker)
+  docker-compose up -d
+  # Verify: docker ps — you should see research-agent-redis running
+
+
+STEP 2: Pull Ollama model
+  ollama pull llama3.2
+
+
+STEP 3: Install Python dependencies
+  pip install -r requirements.txt
+
+
+STEP 4: (Optional) Set SerpAPI key
+  cp .env.example .env
+  # Edit .env and add your SERPAPI_KEY
+  # Without it, demo mode uses realistic mock results
+
+
+STEP 5: Run the app
+  cd "End to End Project"
+  python main.py
+  # Open http://localhost:8000 in your browser
+
+
+DEMO WALKTHROUGH:
+  1. Type a query (e.g. "What is LangGraph?") and click Research
+  2. Watch the execution trace on the right panel — live!
+  3. See LLM call decide_search → see SerpAPI search fire → see LLM summarize
+  4. Read is shown live in the LLM-picks-what-to-remember step
+  5. Human Approval modal pops up — review and click Approve
+  6. save_memory saves to Redis → watch memory panel update
+  7. save_to_db CRASHES 💥 — error shows with checkpoint info
+  8. Click "Fix Bug & Resume from Checkpoint" — graph resumes from save_to_db
+  9. save_to_db now succeeds (skip_db=True injected via checkpoint API)
+ 10. Done! Ask another question — memory is loaded this time
+
+
+FILE STRUCTURE:
+  state.py          — ResearchState TypedDict
+  nodes.py          — All 8 nodes (including intentionally broken one)
+  graph.py          — Graph wiring + interrupt config
+  checkpointer.py   — SQLite checkpointer
+  tools.py          — SerpAPI web search tool
+  memory_store.py   — Redis load/save functions
+  main.py           — FastAPI + SSE streaming server
+  static/index.html — Beautiful real-time UI
+  docker-compose.yml — Redis container
+  requirements.txt  — Python dependencies

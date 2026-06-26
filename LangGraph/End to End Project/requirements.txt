@@ -1,0 +1,8 @@
+fastapi
+uvicorn[standard]
+langgraph
+langgraph-checkpoint-sqlite
+ollama
+redis
+requests
+python-dotenv
