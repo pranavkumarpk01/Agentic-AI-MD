@@ -18,5 +18,9 @@ python-dotenv>=1.0.0
 # Terminal output
 rich>=13.0.0                  # Colored terminal output
 
+# Web server
+fastapi>=0.111.0
+uvicorn>=0.29.0
+
 # Install command:
 # pip install -r requirements.txt

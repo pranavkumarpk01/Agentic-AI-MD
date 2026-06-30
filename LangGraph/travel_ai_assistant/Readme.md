@@ -147,3 +147,45 @@ You: Plan a 3-day trip to Goa — weather, hotels, and how to get there from Ban
 | **ReAct Reasoning** | `graph/edges.py` → `should_continue()` routing |
 | **Tool Messages** | `graph/state.py` → `AgentState` with `messages` |
 | **Graph Building** | `graph/builder.py` → `StateGraph` with nodes/edges |
+
+---
+
+## Running with Docker
+
+> **Prerequisite:** Ollama must be running on your **host machine** (not inside Docker) since the container connects to it over the network.
+
+### 1. Make sure Ollama is running on the host
+
+```bash
+ollama serve          # start Ollama if not already running
+ollama pull llama3.2:3b   # or whichever model you use
+```
+
+### 2. Build the Docker image
+
+```bash
+docker build -t travel-ai-assistant .
+```
+
+### 3. Run the container
+
+`SERPAPI_API_KEY` and `OLLAMA_MODEL` are already set in `config/settings.py` and copied into the image — no env file needed. The only value you must pass is `OLLAMA_BASE_URL`, because `localhost` inside Docker refers to the container, not your machine.
+
+```bash
+docker run -p 8008:8008 \
+  -e OLLAMA_BASE_URL=http://host.docker.internal:11434 \
+  travel-ai-assistant
+```
+
+Then open **http://localhost:8008** in your browser.
+
+> **Linux users:** replace `host.docker.internal` with your host's LAN IP, e.g. `http://172.17.0.1:11434`
+
+### Quick reference
+
+| Command | Description |
+|---------|-------------|
+| `docker build -t travel-ai-assistant .` | Build the image |
+| `docker run -p 8008:8008 -e OLLAMA_BASE_URL=http://host.docker.internal:11434 travel-ai-assistant` | Run web UI |
+| `docker images travel-ai-assistant` | Check image exists |
+| `docker rmi travel-ai-assistant` | Remove the image |
