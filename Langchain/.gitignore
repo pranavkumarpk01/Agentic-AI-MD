@@ -1,5 +1,118 @@
-.venv
-.DS_Store
-Shoppingagent/.DS_Store
+# ========================
+# SECURITY - SECRETS & CREDENTIALS
+# ========================
 .env
- .DS_Store
+.env.local
+.env.*.local
+.env.*.private
+.env.prod
+.env.staging
+*.pem
+*.key
+*.pfx
+.credentials/
+secrets/
+private/
+.aws/
+.gcloud/
+.ssh/
+
+# ========================
+# PYTHON ARTIFACTS
+# ========================
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.eggs/
+build/
+dist/
+*.egg
+*.whl
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# ========================
+# VIRTUAL ENVIRONMENTS
+# ========================
+.venv/
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# ========================
+# DATABASE & CHECKPOINTS
+# ========================
+*.db
+*.sqlite
+*.sqlite3
+database/*.db
+database/*.sqlite
+
+# ========================
+# LOGGING & MONITORING
+# ========================
+*.log
+*.log.*
+logs/
+.logs/
+
+# ========================
+# IDE & EDITOR
+# ========================
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.project
+.pydevproject
+.settings/
+*.sublime-project
+*.sublime-workspace
+.DS_Store
+Thumbs.db
+*.iml
+
+# ========================
+# TESTING & COVERAGE
+# ========================
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.hypothesis/
+
+# ========================
+# NODE & JS (if applicable)
+# ========================
+node_modules/
+npm-debug.log
+yarn-error.log
+.npm/
+
+# ========================
+# RUNTIME ARTIFACTS
+# ========================
+*.pid
+*.seed
+*.pid.lock
+
+# ========================
+# API KEYS & TOKENS (any format)
+# ========================
+**/api_keys.txt
+**/tokens.json
+**/credentials.json
+**/secrets.yaml
+**/secrets.yml
+
+# ========================
+# USER-SPECIFIC FILES
+# ========================
+.env.user
+.env.personal
+.env.development.local

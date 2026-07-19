@@ -1,9 +1,17 @@
 from pathlib import Path
+from dotenv import load_dotenv
 import sqlite3
 import json
 import os
 
-CREWAI_DIR = Path.home() / "Library/Application Support/Crew-AI"
+load_dotenv()
+
+CREWAI_DIR = Path(
+    os.getenv("CREWAI_STORAGE_DIR")
+)
+
+#os.environ["CREWAI_STORAGE_DIR"] = "/Users/pranav/Documents/Agentic AI/Crew-AI/.crewai"
+
 
 print("\n" + "=" * 80)
 print("CREWAI STORAGE LOCATION")

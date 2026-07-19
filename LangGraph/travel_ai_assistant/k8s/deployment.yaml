@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: travel-ai-assistant
+  labels:
+    app: travel-ai-assistant
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: travel-ai-assistant
+  template:
+    metadata:
+      labels:
+        app: travel-ai-assistant
+    spec:
+      containers:
+        - name: travel-ai-assistant
+          image: travel-ai-assistant:latest
+          imagePullPolicy: Never   # use the image loaded locally into Kind (not pulled from registry)
+          ports:
+            - containerPort: 8008
+          envFrom:
+            - configMapRef:
+                name: travel-ai-config
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "250m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"

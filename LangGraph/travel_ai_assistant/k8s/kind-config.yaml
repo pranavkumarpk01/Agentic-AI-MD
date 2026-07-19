@@ -1,0 +1,9 @@
+apiVersion: kind.x-k8s.io/v1alpha4
+kind: Cluster
+name: travel-ai-cluster
+nodes:
+  - role: control-plane
+    extraPortMappings:
+      - containerPort: 30080   # NodePort on the Kind node
+        hostPort: 8008         # Port you'll open in your browser
+        protocol: TCP
